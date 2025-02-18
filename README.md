@@ -1,4 +1,108 @@
+#In linux (Command line)
 
+#Check the quality of sequenves
+fastqc sample_R1.fastq.gz sample_R2.fastq.gz -o fastqc_results/
+
+#Trim reads with fastp
+fastp -i input_R1.fastq.gz -I input_R2.fastq.gz -o trimmed_R1.fastq.gz -O trimmed_R2.fastq.gz \
+      --trim_front1 10 --trim_tail1 50 --trim_front2 10 --trim_tail2 50 \
+      --qualified_quality_phred 30 --length_required 100
+
+#Removes short reads
+java -jar trimmomatic PE -phred33 input_R1.fastq.gz input_R2.fastq.gz \
+     trimmed_R1_paired.fastq.gz trimmed_R1_unpaired.fastq.gz \
+     trimmed_R2_paired.fastq.gz trimmed_R2_unpaired.fastq.gz \
+     SLIDINGWINDOW:4:30 MINLEN:100
+
+ #Creating an environment
+conda update conda conda create -n qiime2-2024.8 --file https://data.qiime2.org/distro/core/qiime2-2024.8-py38-linux-conda.yml conda activate qiime2-2024.8
+conda update conda
+conda activate qiime2-2024.8
+
+#Installing plug in
+conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-dada2
+conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-phylogeny
+
+#Prepare Your Data
+qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-path /yourpath/manifestfilefinalnnn.tsv --output-path paired-end-demux.qza  --input-format PairedEndFastqManifestPhred33V2
+
+#Demultiplexing 
+qiime demux summarize --i-data /yourpath/16SRNApaired-end-demux.qza --o-visualization /yourpath/16SRNAdemux-paired-end.qzv
+
+#visualize on qiime tools view (view.qiime2.org )
+qiime tools view demux.qzv
+
+/yourpath/aligned-rep-seqs.qza --o-masked-alignment /yourpath/masked-aligned-rep-seqs.qza --o-rooted-tree /yoorpath/rooted-tree.qza
+
+
+
+Visualise data
+qiime demux summarize --i-data /yourpath/paired-end-demux.qza --o-visualization /yourpath/demux-paired-end.qzv
+
+Installing dada2 plugin
+conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-dada2
+conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-deblur,
+
+Check quality and what to use in dada3
+
+https://view.qiime2.org/visualization/?src=f710f4e8-0e52-4255-a8c0-e818a0a2dd2c
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs /yourapth/paired-end-demux.qza  --p-trunc-len-f 203  --p-trunc-len-r 200 --o-table /yourpath/table.qza --o-representative-sequences /yourpath/rep-seqs.qza --o-denoising-stats /yourpath/denoising-stats.qza
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs tikagenomeits.qza  --p-trunc-len-f 290 --p-trunc-len-r 290 --o-representative-sequences asv-sequences-0.qza --o-table feature-table-0.qz --o-denoising-stats dada2-stats.qza
+
+qiime feature-table summarize --i-table feature-table-0.qz.qza  --m-sample-metadata-file metadata.tsv --o-visualization feature-table-0-summ.qzv
+
+qiime feature-table tabulate-seqs --i-data asv-sequences-0.qza  --o-visualization asv-sequences-0-summ.qzv
+
+#Visualise DADA results
+
+qiime metadata tabulate  --m-input-file denoising-stats.qza  --o-visualization denoising-stats.qzv
+
+#Rooted tree
+qiime phylogeny align-to-tree-mafft-fasttree --i-sequences rep-seqs.qza --o-tree /yourpath/unrooted-tree.qza --o-alignment
+
+#Taxonomy Assignment
+Use a pre-trained classifier based on the 16S rRNA region (e.g., Silva, Greengenes):
+wget https://data.qiime2.org/2024.8/common/silva-138-99-nb-classifier.qza
+
+#Assigning Taxonomy
+qiime feature-classifier classify-sklearn  --i-classifier silva-138-99-nb-classifier.qza  --i-reads rep-seqs.qza  --o-classification taxonomy.qza
+
+#Visualisation
+qiime metadata tabulate  --m-input-file taxonomy.qza  --o-visualization taxonomy.qzv
+
+#Generate Diversity Metrics
+
+#Create a phylogenetic tree:
+
+qiime phylogeny align-to-tree-mafft-fasttree  --i-sequences rep-seqs.qza --o-alignment aligned-rep-seqs.qza  --o-masked-alignment masked-aligned-rep-seqs.qza  --o-tree unrooted-tree.qza  --o-rooted-tree rooted-tree.qza
+
+#Calculate diversity metrics
+
+qiime diversity core-metrics-phylogenetic  --i-phylogeny rooted-tree.qza  --i-table table.qza --p-sampling-depth 1109  --m-metadata-file sample-metadata.tsv --output-dir core-metrics-results
+
+#FeatureTable and FeatureData summaries
+qiime feature-table summarize --i-table table.qza --o-visualization table.qzv --m-sample-metadata-file manifestfilefinalnnnnf1.tsv
+
+qiime feature-table tabulate-seqs  --i-data 16SRNArep-seqs.qza --o-visualization rep-seqs.qzv
+
+qiime diversity core-metrics-phylogenetic --i-phylogeny rooted-tree.qza --i-table table.qza --p-sampling-depth 3920 --m-metadata-file manifestfilefinalnnnnf1.tsv --output-dir core-metrics-results
+
+
+#Visualize diversity results Alpha and beta diversity analysis¶
+
+qiime diversity alpha-rarefaction \ --i-table table.qza \ --i-phylogeny rooted-tree.qza \ --p-max-depth 4000 \ --m-metadata-file sample-metadata.tsv \ --o-visualization alpha-rarefaction.qzv
+
+Differential Abundance
+qiime composition ancom  --i-table table.qza  --m-metadata-file sample-metadata.tsv  --m-metadata-column group_column  --o-visualization ancom.qzv
+
+
+
+
+ 
+ #In Rstudio
+ 
  Set library path (if needed)
 # .libPaths(new = "C:/Users/MuzhinjiN/AppData/Local/Programs/R/R-4.4.1/library")
 .libPaths()
