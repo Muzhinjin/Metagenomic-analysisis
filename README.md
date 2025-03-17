@@ -15,6 +15,7 @@ java -jar trimmomatic PE -phred33 input_R1.fastq.gz input_R2.fastq.gz \
      SLIDINGWINDOW:4:30 MINLEN:100
 
  #Creating an environment
+conda activate
 conda update conda conda create -n qiime2-2024.8 --file https://data.qiime2.org/distro/core/qiime2-2024.8-py38-linux-conda.yml conda activate qiime2-2024.8
 conda update conda
 conda activate qiime2-2024.8
@@ -30,10 +31,7 @@ qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-
 qiime demux summarize --i-data /yourpath/16SRNApaired-end-demux.qza --o-visualization /yourpath/16SRNAdemux-paired-end.qzv
 
 #visualize on qiime tools view (view.qiime2.org )
-qiime tools view demux.qzv
-
-/yourpath/aligned-rep-seqs.qza --o-masked-alignment /yourpath/masked-aligned-rep-seqs.qza --o-rooted-tree /yoorpath/rooted-tree.qza
-
+qiime tools view demux.qzv /yourpath/aligned-rep-seqs.qza --o-masked-alignment /yourpath/masked-aligned-rep-seqs.qza --o-rooted-tree /yoorpath/rooted-tree.qza
 
 
 Visualise data
@@ -49,8 +47,6 @@ https://view.qiime2.org/visualization/?src=f710f4e8-0e52-4255-a8c0-e818a0a2dd2c
 
 qiime dada2 denoise-paired --i-demultiplexed-seqs /yourapth/paired-end-demux.qza  --p-trunc-len-f 203  --p-trunc-len-r 200 --o-table /yourpath/table.qza --o-representative-sequences /yourpath/rep-seqs.qza --o-denoising-stats /yourpath/denoising-stats.qza
 
-qiime dada2 denoise-paired --i-demultiplexed-seqs tikagenomeits.qza  --p-trunc-len-f 290 --p-trunc-len-r 290 --o-representative-sequences asv-sequences-0.qza --o-table feature-table-0.qz --o-denoising-stats dada2-stats.qza
-
 qiime feature-table summarize --i-table feature-table-0.qz.qza  --m-sample-metadata-file metadata.tsv --o-visualization feature-table-0-summ.qzv
 
 qiime feature-table tabulate-seqs --i-data asv-sequences-0.qza  --o-visualization asv-sequences-0-summ.qzv
@@ -60,7 +56,44 @@ qiime feature-table tabulate-seqs --i-data asv-sequences-0.qza  --o-visualizatio
 qiime metadata tabulate  --m-input-file denoising-stats.qza  --o-visualization denoising-stats.qzv
 
 #Rooted tree
-qiime phylogeny align-to-tree-mafft-fasttree --i-sequences rep-seqs.qza --o-tree /yourpath/unrooted-tree.qza --o-alignment
+qiime phylogeny align-to-tree-mafft-fasttree --i-sequences rep-seqs.qza --o-alignment alligned-rep-seqs.qza --o-masked-alignment masked-aligned-rep-seq.qza --o-tree unrooted-tree.qza --o-rooted-tree rooted-tree.qza
+
+#Training feature classifiers with q2-feature-classifier¶
+mkdir training-feature-classifiers
+cd training-feature-classifiers
+
+#Two elements are required for training the classifier: the reference sequences and the corresponding taxonomic classifications.
+
+For ITS download from UNITE and for 16SRNA use SILVA or Greengenes
+
+Import the data into QIIME 2 Artifacts. The reference taxonomy file (.txt) is a tab-separated (TSV) file without a header, so specify  HeaderlessTSVTaxonomyFormat as the source format since the default source format requires a header.
+
+qiime tools import --type 'FeatureData[Sequence]' --input-path sh_refs_qiime_ver9_99_25.07.2023.fasta  --output-path UNITE.REF.qza
+qiime tools import   --type 'FeatureData[Taxonomy]'  --input-format HeaderlessTSVTaxonomyFormat --input-path sh_taxonomy_qiime_ver9_99_25.07.2023.txt --output-path UNITEref-taxonomy.qza
+
+#Extract reference reads (for 16SRNA include primers and for ITS skip)
+
+#16SRNA
+
+qiime feature-classifier extract-reads \
+  --i-sequences 85_otus.qza \
+  --p-f-primer GTGCCAGCMGCCGCGGTAA \
+  --p-r-primer GGACTACHVGGGTWTCTAAT \
+  --p-trunc-len 120 \
+  --p-min-length 100 \
+  --p-max-length 400 \
+  --o-reads ref-seqs.qza
+
+#ITS
+
+qiime feature-classifier fit-classifier-naive-bayes --i-reference-reads UNITE.REF.qza --i-reference-taxonomy UNITEref-taxonomy.qza --o-classifier unite-classifier.qza
+
+#Training the classifier using reference read and taxonomy
+
+qiime feature-classifier fit-classifier-naive-bayes --i-reference-reads UNITE.REF.qza --i-reference-taxonomy UNITEref-taxonomy.qza --o-classifier unite-classifier.qza
+
+# Taxonomy asignment 
+qiime feature-classifier classify-sklearn  --i-classifier unite-classifier.qza --i-reads rep-seqs.qza --o-classification taxonomy.qza
 
 #Taxonomy Assignment
 Use a pre-trained classifier based on the 16S rRNA region (e.g., Silva, Greengenes):
