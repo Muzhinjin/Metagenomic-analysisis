@@ -16,7 +16,7 @@ java -jar trimmomatic PE -phred33 input_R1.fastq.gz input_R2.fastq.gz \
 
  #Creating an environment
 conda activate
-conda update conda conda create -n qiime2-2024.8 --file https://data.qiime2.org/distro/core/qiime2-2024.8-py38-linux-conda.yml conda activate qiime2-2024.8
+conda update conda conda create -n qiime2-2024.8 --file https://data.qiime2.org/distro/core/qiime2-2024.8-py38-linux-conda.yml conda activate qiime2-2023
 conda update conda
 conda activate qiime2-2024.8
 
@@ -24,28 +24,24 @@ conda activate qiime2-2024.8
 conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-dada2
 conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-phylogeny
 
-#Prepare Your Data
+# Importing Data into QIIME 2
 qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-path /yourpath/manifestfilefinalnnn.tsv --output-path paired-end-demux.qza  --input-format PairedEndFastqManifestPhred33V2
 
-#Demultiplexing 
-qiime demux summarize --i-data /yourpath/16SRNApaired-end-demux.qza --o-visualization /yourpath/16SRNAdemux-paired-end.qzv
+#Visualizing Demultiplexed Sequences 
+qiime demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
 
 #visualize on qiime tools view (view.qiime2.org )
-qiime tools view demux.qzv /yourpath/aligned-rep-seqs.qza --o-masked-alignment /yourpath/masked-aligned-rep-seqs.qza --o-rooted-tree /yoorpath/rooted-tree.qza
+qiime tools view demux-paired-end.qzv 
 
-
-Visualise data
-qiime demux summarize --i-data /yourpath/paired-end-demux.qza --o-visualization /yourpath/demux-paired-end.qzv
-
-Installing dada2 plugin
+#Installing dada2 plugin
 conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-dada2
 conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-deblur,
 
-Check quality and what to use in dada3
+#Check quality and what to use in dada3
 
 https://view.qiime2.org/visualization/?src=f710f4e8-0e52-4255-a8c0-e818a0a2dd2c
 
-qiime dada2 denoise-paired --i-demultiplexed-seqs /yourapth/paired-end-demux.qza  --p-trunc-len-f 203  --p-trunc-len-r 200 --o-table /yourpath/table.qza --o-representative-sequences /yourpath/rep-seqs.qza --o-denoising-stats /yourpath/denoising-stats.qza
+qiime dada2 denoise-paired --i-demultiplexed-seqs paired-end-demux.qza  --p-trunc-len-f 203  --p-trunc-len-r 200 --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
 
 qiime feature-table summarize --i-table feature-table-0.qz.qza  --m-sample-metadata-file metadata.tsv --o-visualization feature-table-0-summ.qzv
 
@@ -105,6 +101,35 @@ qiime feature-classifier classify-sklearn  --i-classifier silva-138-99-nb-classi
 #Visualisation
 qiime metadata tabulate  --m-input-file taxonomy.qza  --o-visualization taxonomy.qzv
 
+#Remove features that contain mitochondria or chloroplast
+qiime taxa filter-table \
+--i-table filtered-sequences/feature-frequency-filtered-table.qza \
+--i-taxonomy taxonomy.qza \
+--p-include p__ \
+--p-exclude mitochondria,chloroplast \
+--o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza
+#Remove Archaea
+qiime taxa filter-table \
+--i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza \
+--i-taxonomy taxonomy.qza \
+--p-exclude "k__Archaea" \
+--o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea.qza
+#Filter Eukaryota
+qiime taxa filter-table \
+--i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea.qza \
+--i-taxonomy taxonomy.qza \
+--p-exclude "k__Eukaryota" \
+--o-filtered-table
+filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza
+
+#Visualize taxonomic classifications
+
+qiime taxa barplot --i-table table.qza --i-taxonomy taxonomy.qza --m-metadata-file ITSTomato.tsv --o-visualization taxa-bar-plots.qzv
+
+#Visualise
+
+qiime tools view taxa-bar-plots.qzv
+
 #Generate Diversity Metrics
 
 #Create a phylogenetic tree:
@@ -125,11 +150,28 @@ qiime diversity core-metrics-phylogenetic --i-phylogeny rooted-tree.qza --i-tabl
 
 #Visualize diversity results Alpha and beta diversity analysis¶
 
-qiime diversity alpha-rarefaction \ --i-table table.qza \ --i-phylogeny rooted-tree.qza \ --p-max-depth 4000 \ --m-metadata-file sample-metadata.tsv \ --o-visualization alpha-rarefaction.qzv
+qiime diversity alpha-rarefaction  --i-table table.qza  --i-phylogeny rooted-tree.qza  --p-max-depth 4000  --m-metadata-file sample-metadata.tsv  --o-visualization alpha-rarefaction.qzv
+
+qiime diversity alpha-group-significance  --i-alpha-diversity diversity-core-metrics-phylogenetic/faith_pd_vector.qza  --m-metadata-file sample-metadata.tsv --o-visualization faith-pd-group-significance.qzv
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity diversity-core-metrics-phylogenetic/evenness_vector.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization evenness-group-significance.qzv
 
 Differential Abundance
 qiime composition ancom  --i-table table.qza  --m-metadata-file sample-metadata.tsv  --m-metadata-column group_column  --o-visualization ancom.qzv
 
+# Convert taxonomy.qza to taxonomy.txt
+qiime tools export --input-path taxonomy.qza --output-path exported-taxonomy
+mv exported-taxonomy/taxonomy.tsv taxonomy.txt
+
+# Convert table.qza to table.txt
+qiime tools export --input-path table.qza --output-path exported-table
+biom convert -i exported-table/feature-table.biom -o table.txt --to-tsv
+
+# Convert rooted-tree.qza to rooted-tree.txt
+qiime tools export --input-path rooted-tree.qza --output-path exported-tree
+mv exported-tree/tree.nwk rooted-tree.txt
 #In Rstudio
 x<-c(1,2,3,4,5,6,7,8,9,10) 
 y<-c(3,6,9,10,13,30,20,100,220,100) 
