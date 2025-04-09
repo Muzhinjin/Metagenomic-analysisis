@@ -1,3 +1,12 @@
+
+module load cluster/hpc
+qstat -a
+qdel 
+
+module load qiime distribution=amplicon
+ern jobs submit --name=16S_preplanting2024.qiime --threads=8 --memory=16gb --hours=1 --inplace --module='qiime/3.0_47df43c distribution=amplicon' --command=qiime -- demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
+
+
 #In linux (Command line)
 
 #Check the quality of sequenves
@@ -25,7 +34,9 @@ conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-dada2
 conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-phylogeny
 
 # Importing Data into QIIME 2
-qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-path /yourpath/manifestfilefinalnnn.tsv --output-path paired-end-demux.qza  --input-format PairedEndFastqManifestPhred33V2
+qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-path 16SRNATomato.tsv --output-path paired-end-demux.qza  --input-format PairedEndFastqManifestPhred33V2
+
+
 
 #Visualizing Demultiplexed Sequences 
 qiime demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
@@ -41,7 +52,7 @@ conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-deblur,
 
 https://view.qiime2.org/visualization/?src=f710f4e8-0e52-4255-a8c0-e818a0a2dd2c
 
-qiime dada2 denoise-paired --i-demultiplexed-seqs paired-end-demux.qza  --p-trunc-len-f 203  --p-trunc-len-r 200 --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
+qiime dada2 denoise-paired --i-demultiplexed-seqs paired-end-demux.qza  --p-trunc-len-f 250  --p-trunc-len-r 200 --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
 
 qiime feature-table summarize --i-table feature-table-0.qz.qza  --m-sample-metadata-file metadata.tsv --o-visualization feature-table-0-summ.qzv
 
