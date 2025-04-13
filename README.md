@@ -113,17 +113,9 @@ qiime feature-classifier classify-sklearn  --i-classifier silva-138-99-nb-classi
 qiime metadata tabulate  --m-input-file taxonomy.qza  --o-visualization taxonomy.qzv
 
 #Remove features that contain mitochondria or chloroplast
-qiime taxa filter-table \
---i-table filtered-sequences/feature-frequency-filtered-table.qza \
---i-taxonomy taxonomy.qza \
---p-include p__ \
---p-exclude mitochondria,chloroplast \
---o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza
+qiime taxa filter-table --i-table filtered-sequences/feature-frequency-filtered-table.qza --i-taxonomy taxonomy.qza --p0-include p__ --p-exclude mitochondria,chloroplast --o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza
 #Remove Archaea
-qiime taxa filter-table \
---i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza \
---i-taxonomy taxonomy.qza \
---p-exclude "k__Archaea" \
+qiime taxa filter-table --i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza --i-taxonomy taxonomy.qza --p-exclude "k__Archaea" \
 --o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea.qza
 #Filter Eukaryota
 qiime taxa filter-table \
