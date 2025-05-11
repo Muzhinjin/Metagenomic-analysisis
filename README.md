@@ -4,8 +4,23 @@ qstat -a
 qdel 
 
 module load qiime distribution=amplicon
+#Import
 ern jobs submit --name=16S_preplanting2024.qiime --threads=8 --memory=16gb --hours=1 --inplace --module='qiime/3.0_47df43c distribution=amplicon' --command=qiime -- demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
+qiime tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
 
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- quality-filter q-score --i-demux pacbio-demux.qza --o-filtered-sequences filtered-pacbio-demux.qza --o-filter-stats filter-stats.qza 
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime vsearch dereplicate-sequences --i-sequences filtered-pacbio-demux.qza --o-dereplicated-table table.qza --o-dereplicated-sequences rep-seqs.qza
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier classify-sklearn  --i-classifier classifier-V34.qza  --i-reads rep-seqs.qza  --o-classification taxonomy.qza
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- alignment mafft --i-sequences rep-seqs.qza --o-alignment aligned-rep-seqs.qza --p-n-threads 4
+
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier fit-classifier-naive-bayes --i-reference-reads silva-138-99-nb-classifier.qza --i-reads rep-seqs.qza --o-classification taxonomy.qza
 
 #In linux (Command line)
 
@@ -118,12 +133,19 @@ qiime taxa filter-table --i-table filtered-sequences/feature-frequency-filtered-
 qiime taxa filter-table --i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplast.qza --i-taxonomy taxonomy.qza --p-exclude "k__Archaea" \
 --o-filtered-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea.qza
 #Filter Eukaryota
-qiime taxa filter-table \
---i-table filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea.qza \
---i-taxonomy taxonomy.qza \
---p-exclude "k__Eukaryota" \
---o-filtered-table
-filtered-sequences/table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza
+qiime taxa filter-table --i-table table-with-phyla-no-mitochondria-chloroplasts-archaea.qza --i-taxonomy taxonomy.qza --p-exclude "k__Eukaryota" --o-filtered-table table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza
+
+#Filter from sequences
+Remove features that contain mitochondria or chloroplast 
+qiime taxa filter-seqs --i-sequences rep-seqs.qza --i-taxonomy taxonomy.qza --p-include p__ --p-exclude mitochondria,chloroplast --o-filtered-sequences rep-seqs-with-phyla-no-mitochondria-chloroplast.qza
+
+
+#Remove Archaea
+qiime taxa filter-seqs --i-sequences rep-seqs-with-phyla-no-mitochondria-chloroplast.qza --i-taxonomy taxonomy.qza --p-exclude "k__Archaea" --o-filtered-sequences filtered-sequences/rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea.qza
+
+#Let’s rename the final filtered file to proceed
+mv table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza filtered-table2.qza
+mv rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza filtered-rep-seqs2.qza
 
 #Visualize taxonomic classifications
 
