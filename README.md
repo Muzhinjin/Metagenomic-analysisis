@@ -2,6 +2,8 @@
 module load cluster/hpc
 qstat -a
 qdel 
+ern cluster create --name=hpc --head-node=login.hpc.ufs.ac.za --node-select=ern --email-address=MuzhinjiN@ufs.ac.za --shared-fs
+
 
 module load qiime distribution=amplicon
 #Import
