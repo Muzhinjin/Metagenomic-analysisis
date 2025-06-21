@@ -57,6 +57,7 @@ qiime tools import  --type 'SampleData[PairedEndSequencesWithQuality]'  --input-
 
 #Visualizing Demultiplexed Sequences 
 qiime demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
+rm stdout stderr script.sh (remoce 
 
 #visualize on qiime tools view (view.qiime2.org )
 qiime tools view demux-paired-end.qzv 
