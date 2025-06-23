@@ -1,4 +1,4 @@
-
+qstat -a 448956 (16RA straberry dadda)
 module load cluster/hpc
 qstat -a
 qdel 
