@@ -20,6 +20,8 @@ ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier classify-sklearn  --i-classifier classifier-V34.qza  --i-reads rep-seqs.qza  --o-classification taxonomy.qza
 
+ern jobs submit --name=16SRNAstraberryclassfier --threads=16 --memory=128gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier classify-sklearn  --i-reads rep-seqs.qza --i-classifier unite_ver10_dynamic.qza --p-n-jobs  16 --o-classification vtaxonomy.qza  --verbose
+
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- alignment mafft --i-sequences rep-seqs.qza --o-alignment aligned-rep-seqs.qza --p-n-threads 4
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier fit-classifier-naive-bayes --i-reference-reads silva-138-99-nb-classifier.qza --i-reads rep-seqs.qza --o-classification taxonomy.qza
@@ -71,6 +73,8 @@ conda install -c qiime2 -c conda-forge -c bioconda -c defaults q2-deblur,
 https://view.qiime2.org/visualization/?src=f710f4e8-0e52-4255-a8c0-e818a0a2dd2c
 
 qiime dada2 denoise-paired --i-demultiplexed-seqs paired-end-demux.qza  --p-trunc-len-f 250  --p-trunc-len-r 200 --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
+ern jobs submit --name=16SRNATika_strawberry.qiime --threads=16 --memory=64gb --hours=100 --input=paired-end-demux.qza --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-paired --i-demultiplexed-seqs paired-end-demux.qza  --p-trunc-len-f 250  --p-trunc-len-r 200 --p-n-threads 16  --o-table table.qza --o-representative-sequences vrep-seqs.qza --o-denoising-stats vdenoising-stats.qza
+
 
 qiime feature-table summarize --i-table feature-table-0.qz.qza  --m-sample-metadata-file metadata.tsv --o-visualization feature-table-0-summ.qzv
 
