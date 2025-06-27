@@ -1,3 +1,4 @@
+https://chiliubio.github.io/microeco_tutorial/meconetcomp-package.html#network-modularity-for-all-networks
 qstat -a 448956 (16RA straberry dadda)
 module load cluster/hpc
 qstat -a
