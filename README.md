@@ -5,7 +5,10 @@ qstat -a
 qdel 
 ern cluster create --name=hpc --head-node=login.hpc.ufs.ac.za --node-select=ern --email-address=MuzhinjiN@ufs.ac.za --shared-fs
 
-
+qiime tools export \
+  --input-path vrep-seqs.qza \
+  --output-path exported-rep-seqs
+  
 module load qiime distribution=amplicon
 #Import
 ern jobs submit --name=16S_preplanting2024.qiime --threads=8 --memory=16gb --hours=1 --inplace --module='qiime/3.0_47df43c distribution=amplicon' --command=qiime -- demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
