@@ -15,12 +15,15 @@ ern jobs submit --name=16S_preplanting2024.qiime --threads=8 --memory=16gb --hou
 qiime tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
-
+ ern jobs submit --name=16SRNA.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path maize16SRNAS.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
+ 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- quality-filter q-score --i-demux pacbio-demux.qza --o-filtered-sequences filtered-pacbio-demux.qza --o-filter-stats filter-stats.qza 
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime vsearch dereplicate-sequences --i-sequences filtered-pacbio-demux.qza --o-dereplicated-table table.qza --o-dereplicated-sequences rep-seqs.qza
+# use quotes
+ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command="qiime vsearch dereplicate-sequences --i-sequences filtered-pacbio-demux.qza --o-dereplicated-table table.qza --o-dereplicated-sequences rep-seqs.qza"
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier classify-sklearn  --i-classifier classifier-V34.qza  --i-reads rep-seqs.qza  --o-classification taxonomy.qza
 
