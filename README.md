@@ -13,6 +13,8 @@ module load qiime distribution=amplicon
 #Import
 ern jobs submit --name=16S_preplanting2024.qiime --threads=8 --memory=16gb --hours=1 --inplace --module='qiime/3.0_47df43c distribution=amplicon' --command=qiime -- demux summarize --i-data paired-end-demux.qza --o-visualization demux-paired-end.qzv
 qiime tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
+ern jobs submit --name=nduduzo --threads=16 --memory=64gb --hours=100 --input="*.fastq.gz" --input=final.tsv --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path final.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
+
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path Metadata.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
  ern jobs submit --name=16SRNA.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path maize16SRNAS.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
@@ -32,6 +34,16 @@ ern jobs submit --name=16SRNAstraberryclassfier --threads=16 --memory=128gb --ho
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- alignment mafft --i-sequences rep-seqs.qza --o-alignment aligned-rep-seqs.qza --p-n-threads 4
 
 ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 --inplace --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- feature-classifier fit-classifier-naive-bayes --i-reference-reads silva-138-99-nb-classifier.qza --i-reads rep-seqs.qza --o-classification taxonomy.qza
+
+# Nduduzo
+ern jobs submit --name=nduduzo --threads=16 --memory=64gb --hours=100 --input="*.fastq.gz" --input=final.tsv --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path final.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
+ern jobs submit --name=nduduzodmux --threads=16 --memory=64gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
+
+ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
+
+ern jobs submit --name=nduduzofeaturetable --threads=16 --memory=128gb  --hours=100 --input="table.qza" --input=metadata.tsv --module='qiime/4.0_bca2b43 distribution=amplicon'  --command="qiime feature-table summarize --i-table table.qza --m-sample-metadata-file metadata.tsv --o-visualization table.qzv"
+
+ern jobs submit --name=nduduzofeaturetable --threads=16 --memory=128gb  --hours=100 --input="table.qza" --input=metadata.tsv --module='qiime/4.0_bca2b43 distribution=amplicon'  --command="qiime feature-table summarize --i-table table.qza --m-sample-metadata-file metadata.tsv --o-visualization table.qzv"
 
 #In linux (Command line)
 
