@@ -40,6 +40,12 @@ ern jobs submit --name=nduduzo --threads=16 --memory=64gb --hours=100 --input="*
 ern jobs submit --name=nduduzodmux --threads=16 --memory=64gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
 
 ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
+ern jobs submit --name=nduduzodada --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 0 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
+ern jobs submit   --name=nduduzodmux   --threads=16   --memory=64gb   --hours=100   --input=final.tsv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import \
+--type 'SampleData[SequencesWithQuality]' \
+--input-path final.tsv \
+--output-path pacbio-demux.qza \
+ --input-format SingleEndFastqManifestPhred33V2"
 
 ern jobs submit --name=nduduzofeaturetable --threads=16 --memory=128gb  --hours=100 --input="table.qza" --input=metadata.tsv --module='qiime/4.0_bca2b43 distribution=amplicon'  --command="qiime feature-table summarize --i-table table.qza --m-sample-metadata-file metadata.tsv --o-visualization table.qzv"
 
