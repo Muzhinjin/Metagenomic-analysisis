@@ -41,9 +41,9 @@ ern jobs submit --name=nduduzodmux --threads=16 --memory=64gb --hours=100 --inpu
 
 ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
 ern jobs submit --name=nduduzodada --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 0 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
-ern jobs submit   --name=nduduzodmux   --threads=16   --memory=64gb   --hours=100   --input=final.tsv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import \
+ern jobs submit   --name=mosaITSdmux   --threads=16   --memory=64gb   --hours=100   --input=ITSmetadata.tsv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import \
 --type 'SampleData[SequencesWithQuality]' \
---input-path final.tsv \
+--input-path ITSmetadata.tsv \
 --output-path pacbio-demux.qza \
  --input-format SingleEndFastqManifestPhred33V2"
 
