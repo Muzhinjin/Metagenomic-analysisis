@@ -39,13 +39,29 @@ ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 
 ern jobs submit --name=nduduzo --threads=16 --memory=64gb --hours=100 --input="*.fastq.gz" --input=final.tsv --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path final.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
 ern jobs submit --name=nduduzodmux --threads=16 --memory=64gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
 
+ern jobs submit \
+  --name=pacbio_dada2_ccs \
+  --threads=16 \
+  --memory=128gb \
+  --hours=100 \
+  --input=pacbio-demux.qza \
+  --module='qiime/4.0_bca2b43 distribution=amplicon' \
+  --command="qiime dada2 denoise-ccs \
+    --i-demultiplexed-seqs pacbio-demux.qza \
+    --p-front AGRGTTYGATYMTGGCTCAG \
+    --p-adapter RGYTACCTTGTTACGACTT \
+    --p-min-len 1000 \
+    --p-max-len 1600 \
+    --p-max-ee 5 \
+    --p-pooling-method pseudo \
+    --p-n-threads 16 \
+    --o-table table.qza \
+    --o-representative-sequences rep-seqs.qza \
+    --o-denoising-stats denoising-stats.qza"
+
 ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
 ern jobs submit --name=nduduzodada --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 0 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
-ern jobs submit   --name=mosaITSdmux   --threads=16   --memory=64gb   --hours=100   --input=ITSmetadata.tsv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import \
---type 'SampleData[SequencesWithQuality]' \
---input-path ITSmetadata.tsv \
---output-path pacbio-demux.qza \
- --input-format SingleEndFastqManifestPhred33V2"
+ern jobs submit   --name=lebopotto16Sdmux   --threads=16   --memory=128gb   --hours=100   --input=lebo16Smetadata.csv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import --type 'SampleData[SequencesWithQuality]' --input-path lebo16Smetadata.csv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2"
 
 ern jobs submit --name=nduduzofeaturetable --threads=16 --memory=128gb  --hours=100 --input="table.qza" --input=metadata.tsv --module='qiime/4.0_bca2b43 distribution=amplicon'  --command="qiime feature-table summarize --i-table table.qza --m-sample-metadata-file metadata.tsv --o-visualization table.qzv"
 
