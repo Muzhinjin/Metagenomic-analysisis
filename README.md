@@ -39,6 +39,8 @@ ern jobs submit --name=petrus_nust.qiime --threads=16 --memory=64gb --hours=100 
 ern jobs submit --name=nduduzo --threads=16 --memory=64gb --hours=100 --input="*.fastq.gz" --input=final.tsv --module='qiime/4.0_bca2b43 distribution=tiny' --command=qiime -- tools import --type 'SampleData[SequencesWithQuality]' --input-path final.tsv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2
 ern jobs submit --name=nduduzodmux --threads=16 --memory=64gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- demux summarize --i-data pacbio-demux.qza --o-visualization pacbio-demux.qzv
 
+# lebo
+
 ern jobs submit \
   --name=pacbio_dada2_ccs \
   --threads=16 \
@@ -58,8 +60,18 @@ ern jobs submit \
     --o-table table.qza \
     --o-representative-sequences rep-seqs.qza \
     --o-denoising-stats denoising-stats.qza"
+# Taxonomy
+    ern jobs submit --name=lebo16Staxonomy --threads=16 --memory=64gb --hours=24 --input=rep-seqs.qza --module='qiime/4.0_bca2b43 distribution=amplicon' --command="qiime feature-classifier classify-sklearn --i-classifier SILVA138.2_SSURef_NR99_bacteria_classifier.qza --i-reads rep-seqs.qza --p-n-jobs 16 --o-classification taxonomy.qza"
 
-ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
+    # Tree
+
+    ern jobs submit --name=lebo16S_phylogeny --threads=16 --memory=128gb --hours=100 --input=rep-seqs.qza --module='qiime/4.0_bca2b43 distribution=amplicon' --command="qiime phylogeny align-to-tree-mafft-fasttree --i-sequences rep-seqs.qza --p-n-threads 16 --o-alignment aligned-rep-seqs.qza --o-masked-alignment masked-aligned-rep-seqs.qza --o-tree unrooted-tree.qza --o-rooted-tree tree.qza"
+
+    # ITS
+    ern jobs submit --name=pacbio_ITS_dada2 --threads=16 --memory=128gb --hours=100 --input=pacbio-demux.qza --module='qiime/4.0_bca2b43 distribution=amplicon' --command="qiime dada2 denoise-ccs --i-demultiplexed-seqs pacbio-demux.qza a --p-front TCCGTAGGTGAACCTGCGG --p-adapter TCCTCCGCTTATTGATATGC --p-min-len 200 --p-max-len 1800 --p-max-ee 5 --p-pooling-method pseudo --p-n-threads 16 --o-table its-table.qza --o-representative-sequences its-rep-seqs.qza --o-denoising-stats its-denoising-stats.qza"
+
+ern jobs submit --name=nduduzodmux --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 1600 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza  
+
 ern jobs submit --name=nduduzodada --threads=16 --memory=128gb --hours=100 --input="pacbio-demux.qza" --module='qiime/4.0_bca2b43 distribution=amplicon' --command=qiime -- dada2 denoise-single --i-demultiplexed-seqs pacbio-demux.qza --p-trim-left 0 --p-trunc-len 0 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats denoising-stats.qza
 ern jobs submit   --name=lebopotto16Sdmux   --threads=16   --memory=128gb   --hours=100   --input=lebo16Smetadata.csv   --module='qiime/4.0_bca2b43 distribution=amplicon'   --command="qiime tools import --type 'SampleData[SequencesWithQuality]' --input-path lebo16Smetadata.csv --output-path pacbio-demux.qza --input-format SingleEndFastqManifestPhred33V2"
 
